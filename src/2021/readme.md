@@ -2,5 +2,6 @@
 
 Its time for some Ruby.
 
-## Getting started
+## Getting started
+
 Open in VSCode, using the ruby dev container
