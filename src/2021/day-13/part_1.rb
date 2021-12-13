@@ -1,4 +1,4 @@
-file = File.open(File.expand_path('./input.txt', __dir__))
+file = File.open(File.expand_path('./test.txt', __dir__))
 input = file.readlines.map(&:chomp)
 
 def rotate(sheet, deg)
@@ -15,22 +15,14 @@ def rotate(sheet, deg)
 end
 
 def split_on_y(sheet, y)
-  top = []
-  bottom = []
-
-  sheet.each_with_index do |line, idx|
-    top.push(line) if idx < y
-    bottom.push(line) if idx > y
-  end
-
-  [top, bottom]
+  [sheet[0..(y - 1)], sheet[(y + 1)..(sheet.length - 1)]]
 end
 
 def split_on_x(sheet, x)
   left = []
   right = []
 
-  sheet.each_with_index do |line, _idx|
+  sheet.each do |line|
     left.push(line[0..(x - 1)])
     right.push(line[(x + 1)..(line.length - 1)])
   end
@@ -38,30 +30,29 @@ def split_on_x(sheet, x)
   [left, right]
 end
 
+def overlay_sheets(base, overlay)
+  b = base
+  overlay.each_with_index do |row, y_idx|
+    row.each_with_index do |col, x_idx|
+      b[y_idx][x_idx] = overlay[y_idx][x_idx] if col == '#'
+    end
+  end
+
+  b
+end
+
 def fold_on_y(sheet, y)
   top, bottom = split_on_y(sheet, y)
   bottom = rotate(bottom, 180).map(&:reverse)
 
-  bottom.each_with_index do |row, y_idx|
-    row.each_with_index do |col, x_idx|
-      top[y_idx][x_idx] = bottom[y_idx][x_idx] if col == '#'
-    end
-  end
-
-  top
+  overlay_sheets(top, bottom)
 end
 
 def fold_on_x(sheet, x)
   left, right = split_on_x(sheet, x)
   right = right.map(&:reverse)
 
-  right.each_with_index do |row, y_idx|
-    row.each_with_index do |col, x_idx|
-      left[y_idx][x_idx] = right[y_idx][x_idx] if col == '#'
-    end
-  end
-
-  left
+  overlay_sheets(left, right)
 end
 
 coordinates = input.select { |line| line.include? ',' }.map do |coordinate|

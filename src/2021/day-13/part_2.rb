@@ -15,15 +15,7 @@ def rotate(sheet, deg)
 end
 
 def split_on_y(sheet, y)
-  top = []
-  bottom = []
-
-  sheet.each_with_index do |line, idx|
-    top.push(line) if idx < y
-    bottom.push(line) if idx > y
-  end
-
-  [top, bottom]
+  [sheet[0..(y - 1)], sheet[(y + 1)..(sheet.length - 1)]]
 end
 
 def split_on_x(sheet, x)
@@ -38,17 +30,22 @@ def split_on_x(sheet, x)
   [left, right]
 end
 
+def overlay_sheets(base, overlay)
+  b = base
+  overlay.each_with_index do |row, y_idx|
+    row.each_with_index do |col, x_idx|
+      b[y_idx][x_idx] = overlay[y_idx][x_idx] if col == '#'
+    end
+  end
+
+  b
+end
+
 def fold_on_y(sheet, y)
   top, bottom = split_on_y(sheet, y)
   bottom = rotate(bottom, 180).map(&:reverse)
 
-  bottom.each_with_index do |row, y_idx|
-    row.each_with_index do |col, x_idx|
-      top[y_idx][x_idx] = bottom[y_idx][x_idx] if col == '#'
-    end
-  end
-
-  top
+  overlay_sheets(top, bottom)
 end
 
 def fold_on_x(sheet, x)
