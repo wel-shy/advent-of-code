@@ -1,5 +1,4 @@
-file = File.open(File.expand_path('./test.txt', __dir__))
-input = file.readlines.map(&:chomp)
+require_relative '../utils/files'
 
 def rotate(sheet, deg)
   rotations = deg / 90
@@ -55,6 +54,8 @@ def fold_on_x(sheet, x)
   overlay_sheets(left, right)
 end
 
+input = read_file_as_lines(File.expand_path('./input.txt', __dir__))
+
 coordinates = input.select { |line| line.include? ',' }.map do |coordinate|
   coordinate.split(',').map do |x|
     Integer(x)
@@ -69,10 +70,7 @@ instructions = input
 # Initialise the sheet
 max_x = coordinates.map { |coordinate| coordinate[0] }.max
 max_y = coordinates.map { |coordinate| coordinate[1] }.max
-sheet = []
-(0..max_y).to_a.each do |_|
-  sheet.push((0..max_x).to_a.map { |_| '.' })
-end
+sheet = (0..max_y).to_a.map { |_row| (0..max_x).to_a.map { |_| '.' } }
 
 coordinates.each do |coord|
   x, y = coord
