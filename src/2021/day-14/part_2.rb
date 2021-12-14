@@ -45,5 +45,3 @@ end
 
 sorted = p_counts.values.sort
 p sorted[sorted.length - 1] - sorted[0]
-
-# # work out each input pair individually, and then add the string
