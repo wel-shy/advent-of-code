@@ -65,14 +65,13 @@ closed_set = Hash.new(false)
 open_set = {}
 open_set[START] = [
   0, # f
-  get_h_score(START, FINISH), # h
   0,
   START
 ]
 
 until open_set.empty?
   current_node = get_lowest_f_score(open_set)
-  _, _, g, point = current_node
+  _f, g, point = current_node
   break if point == FINISH
 
   open_set.delete(point)
@@ -86,21 +85,20 @@ until open_set.empty?
   children.each do |key, value|
     child_g = g + value
     child_h = get_h_score(point, FINISH)
-    child_node = [child_g + child_h, child_h, child_g, key]
+    child_node = [child_g + child_h, child_g, key]
 
     if open_set.key?(key) == false
       open_set[key] = child_node
       next
     end
 
-    open_set[key] = child_node if child_g < open_set[key][2]
+    open_set[key] = child_node if child_g < open_set[key][1]
   end
 
   closed_set[point] = true
 end
 
-p open_set[FINISH][2]
-
 iter_end = (Time.now.to_f * 1_000).to_i
 
+p open_set[FINISH][1]
 p "Total time (ms): #{iter_end - iter_start}"
