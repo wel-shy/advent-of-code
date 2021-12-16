@@ -1,6 +1,11 @@
 require_relative '../utils/files'
 require_relative '../utils/arrays'
 
+require 'rubygems'
+require 'algorithms'
+
+include Containers
+
 def get_lowest_f_score(open_set)
   lowest = open_set[0]
   open_set.each do |node|
@@ -29,7 +34,7 @@ def expand_grid(grid)
   new_grid
 end
 
-input = read_file_as_lines(File.expand_path('./test.txt', __dir__))
+input = read_file_as_lines(File.expand_path('./input.txt', __dir__))
         .map { |line| line.split('').map { |x| Integer(x) } }
 
 input = expand_grid(input)
@@ -63,35 +68,49 @@ open_set = [
     nil
   ]
 ]
-closed_set = []
+
+# g, node, previous
+closed_set = MinHeap.new
+# closed_set.push(START, [0, START, nil])
 
 step = 0
 until open_set.empty?
   step += 1
-  current_node = get_lowest_f_score(open_set)
-  _, _, g, point, = current_node
-  open_set = open_set.reject { |node| node[3] == point }
+  iter_start = (Time.now.to_f * 1_000_000).to_i
 
-  p step if (step % 100).zero?
+  current_node = get_lowest_f_score(open_set)
+  _, _, g, point, from = current_node
+  open_set = open_set.reject { |node| node[3] == point }
 
   p g if point == FINISH
   break if point == FINISH
 
+  # filter visited children
   children = graph[point]
-  children.each do |key, value|
-    next if closed_set.index { |node| node[3] == key }
+  visited_children = children.keys.select { |key| closed_set.has_key?(key) }
+  children = children.reject { |k, _v| visited_children.include?(k) }
 
+  children.each do |key, value|
     index = open_set.index { |node| node[node.length - 1] == key }
     child_g = g + value
     child_h = get_h_score(point, FINISH)
     child_node = [child_g + child_h, child_h, child_g, key, point]
+
     if index.nil?
       open_set.push(child_node)
       next
     end
 
-    open_set[index] = [child_node] if child_g < open_set[index][2]
+    open_set[index] = child_node if child_g < open_set[index][2]
   end
 
-  closed_set.push(current_node)
+  get_start = (Time.now.to_f * 1_000_000).to_i
+  # p point, [g, point, from]
+  closed_set.push(point)
+  get_end = (Time.now.to_f * 1_000_000).to_i
+
+  iter_end = (Time.now.to_f * 1_000_000).to_i
+  if (step % 500).zero?
+    p "#{step}: #{open_set.length}: get_node: #{get_end - get_start} => time: #{iter_end - iter_start}"
+  end
 end

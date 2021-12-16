@@ -2,8 +2,8 @@ require_relative '../utils/files'
 require_relative '../utils/arrays'
 
 def get_lowest_f_score(open_set)
-  lowest = open_set[0]
-  open_set.each do |node|
+  lowest = open_set.values[0]
+  open_set.each do |_key, node|
     lowest = node if node[0] < lowest[0]
   end
 
@@ -29,7 +29,7 @@ def expand_grid(grid)
   new_grid
 end
 
-input = read_file_as_lines(File.expand_path('./test.txt', __dir__))
+input = read_file_as_lines(File.expand_path('./input.txt', __dir__))
         .map { |line| line.split('').map { |x| Integer(x) } }
 
 input = expand_grid(input)
@@ -54,44 +54,53 @@ input.each_with_index do |line, y|
   end
 end
 
-open_set = [
-  [
-    0, # f
-    get_h_score(START, FINISH), # h
-    0,
-    START,
-    nil
-  ]
+# A* search for finding the shorted path, using a queue.
+# As we are fetching based on the index of the 2D array
+# we can use a regular hashmap instead of a heap and
+# benefit from indexing directly.
+
+iter_start = (Time.now.to_f * 1_000).to_i
+
+closed_set = Hash.new(false)
+open_set = {}
+open_set[START] = [
+  0, # f
+  get_h_score(START, FINISH), # h
+  0,
+  START
 ]
-closed_set = []
 
-step = 0
 until open_set.empty?
-  step += 1
   current_node = get_lowest_f_score(open_set)
-  _, _, g, point, = current_node
-  open_set = open_set.reject { |node| node[3] == point }
-
-  p step if (step % 100).zero?
-
-  p g if point == FINISH
+  _, _, g, point = current_node
   break if point == FINISH
 
-  children = graph[point]
-  children.each do |key, value|
-    next if closed_set.index { |node| node[3] == key }
+  open_set.delete(point)
 
-    index = open_set.index { |node| node[node.length - 1] == key }
+  # filter visited children
+  children = graph[point]
+  visited_children = children.keys.select { |key| closed_set.key?(key) }
+  children = children.reject { |k, _v| visited_children.include?(k) }
+
+  # Add unvisited children to the open set, or adjust it's g score.
+  children.each do |key, value|
     child_g = g + value
     child_h = get_h_score(point, FINISH)
-    child_node = [child_g + child_h, child_h, child_g, key, point]
-    if index.nil?
-      open_set.push(child_node)
+    child_node = [child_g + child_h, child_h, child_g, key]
+
+    if open_set.key?(key) == false
+      open_set[key] = child_node
       next
     end
 
-    open_set[index] = [child_node] if child_g < open_set[index][2]
+    open_set[key] = child_node if child_g < open_set[key][2]
   end
 
-  closed_set.push(current_node)
+  closed_set[point] = true
 end
+
+p open_set[FINISH][2]
+
+iter_end = (Time.now.to_f * 1_000).to_i
+
+p "Total time (ms): #{iter_end - iter_start}"
