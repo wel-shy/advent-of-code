@@ -5,8 +5,10 @@
 
 /target
 .vscode/
-test.txt
-input.txt
+*.txt
+
+*/**/bin/
+*/**/obj/
 
 # Added by cargo
 #
