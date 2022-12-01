@@ -1,7 +1,7 @@
-namespace AdventOfCode
+namespace AdventOfCodeWarmUp
 
 module Day1 =
-    let inputPath = "../inputs/day_1.txt"
+    let inputPath = "./inputs/day_1.txt"
     let windowSize = 3
 
     let getWindowSum (list: List<int>) windowSize index =
@@ -22,19 +22,15 @@ module Day1 =
                 0)
 
     let part1 =
-        let lines =
-            Utils.readAllLines (inputPath)
-            |> List.map int
-            |> mapToGreaterThanPrevious
-            |> List.sum
+        AdventOfCode.Utils.readAllLines (inputPath)
+        |> List.map int
+        |> mapToGreaterThanPrevious
+        |> List.sum
 
-        lines
+
 
     let part2 =
-        let lines =
-            Utils.readAllLines (inputPath)
-            |> List.map int
-            |> mapToGreaterThanPreviousWindow
-            |> List.sum
-
-        lines
+        AdventOfCode.Utils.readAllLines (inputPath)
+        |> List.map int
+        |> mapToGreaterThanPreviousWindow
+        |> List.sum

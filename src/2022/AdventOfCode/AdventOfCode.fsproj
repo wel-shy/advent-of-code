@@ -7,6 +7,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="WarmUp/Day1.fs" />
     <Compile Include="WarmUp/Day2.fs" />
+    <Compile Include="Day1/Day1.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

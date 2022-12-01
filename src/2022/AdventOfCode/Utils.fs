@@ -1,6 +1,5 @@
 namespace AdventOfCode
 
-open System
 open System.IO
 
 module Utils =
