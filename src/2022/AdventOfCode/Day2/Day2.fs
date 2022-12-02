@@ -3,44 +3,51 @@ namespace AdventOfCode
 module Day2 =
     let inputPath = "./Day2/input.txt"
 
-    let winningPairs = [ "A", "C"; "B", "A"; "C", "B" ] |> Map.ofList
-    let losingPairs = [ "C", "A"; "A", "B"; "B", "C" ] |> Map.ofList
-
-    let getLines =
-        Utils.readAllLines (inputPath) |> List.map (fun (x: string) -> x.Split(" "))
-
     type ResultScore =
         | WIN = 6
         | DRAW = 3
         | LOSS = 0
 
+    let selectionMap = [ "X", "A"; "Y", "B"; "Z", "C" ] |> Map.ofList
+    let itemScore = [ "A", 1; "B", 2; "C", 3 ] |> Map.ofList
+    let losingPairs = [ "A", "C"; "B", "A"; "C", "B" ] |> Map.ofList
+    let winingPairs = [ "C", "A"; "A", "B"; "B", "C" ] |> Map.ofList
+
+    let parseLineToTuple (line: string) =
+        let x = line.Split(" ")
+        (x[0], x[1])
+
+    let getLines =
+        Utils.readAllLines (inputPath)
+        |> List.map (fun (x: string) -> parseLineToTuple x)
+
     let getResultScore l r =
-        let isWin = (l = "A" && r = "B") || (l = "B" && r = "C") || (l = "C" && r = "A")
+        let isWin = winingPairs[l] = r
+        let isDraw = l = r
 
-        if l = r then ResultScore.DRAW
-        elif isWin then ResultScore.WIN
-        else ResultScore.LOSS
+        match isWin with
+        | true -> ResultScore.WIN
+        | false ->
+            match isDraw with
+            | true -> ResultScore.DRAW
+            | false -> ResultScore.LOSS
 
-    let getScore (move: string[]) =
-        let itemScore = [ "A", 1; "B", 2; "C", 3 ] |> Map.ofList
+    let getScore (x, y) =
+        itemScore[y] + LanguagePrimitives.EnumToValue(getResultScore x y)
 
-        itemScore[move[1]]
-        + LanguagePrimitives.EnumToValue(getResultScore move[0] move[1])
+    let getMatchingPair move =
+        let (x, y) = move
 
-    let getMatchingPair (move: string[]) =
-        if move[1] = "Y" then move[0]
-        elif move[1] = "Z" then losingPairs[move[0]]
-        else winningPairs[move[0]]
+        match y with
+        | "Y" -> x
+        | "Z" -> winingPairs[x]
+        | _ -> losingPairs[x]
 
     let part1: int =
-        let selectionMap = [ "X", "A"; "Y", "B"; "Z", "C" ] |> Map.ofList
-
-        getLines
-        |> List.map (fun (x: string[]) -> getScore ([| x[0]; selectionMap[x[1]] |]))
-        |> List.sum
+        getLines |> List.map (fun (x, y) -> getScore (x, selectionMap[y])) |> List.sum
 
     let part2 =
         getLines
-        |> List.map (fun (x: string[]) -> [| x[0]; getMatchingPair x |])
+        |> List.map (fun (x, y) -> (x, getMatchingPair ((x, y))))
         |> List.map (fun (x) -> getScore x)
         |> List.sum
