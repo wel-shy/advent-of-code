@@ -3,27 +3,39 @@ namespace AdventOfCode
 module Day2 =
     let inputPath = "./Day2/input.txt"
 
+    type Result =
+        | WIN
+        | DRAW
+        | LOSS
+
     type ResultScore =
         | WIN = 6
         | DRAW = 3
         | LOSS = 0
 
-    let selectionMap = [ "X", "A"; "Y", "B"; "Z", "C" ] |> Map.ofList
     let itemScore = [ "A", 1; "B", 2; "C", 3 ] |> Map.ofList
     let losingPairs = [ "A", "C"; "B", "A"; "C", "B" ] |> Map.ofList
     let winingPairs = [ "C", "A"; "A", "B"; "B", "C" ] |> Map.ofList
+    let selectionMap = [ "X", "A"; "Y", "B"; "Z", "C" ] |> Map.ofList
+
+    let parseInputToResult requiredResult =
+        match requiredResult with
+        | "X" -> LOSS
+        | "Y" -> DRAW
+        | "Z" -> WIN
+        | _ -> failwith "Invalid input"
 
     let parseLineToTuple (line: string) =
         let x = line.Split(" ")
         (x[0], x[1])
 
-    let getLines =
-        Utils.readAllLines (inputPath)
+    let getLines filePath =
+        Utils.readAllLines (filePath)
         |> List.map (fun (x: string) -> parseLineToTuple x)
 
-    let getResultScore l r =
-        let isWin = winingPairs[l] = r
-        let isDraw = l = r
+    let getResultScore oponent you =
+        let isWin = winingPairs[oponent] = you
+        let isDraw = oponent = you
 
         match isWin with
         | true -> ResultScore.WIN
@@ -36,18 +48,21 @@ module Day2 =
         itemScore[y] + LanguagePrimitives.EnumToValue(getResultScore x y)
 
     let getMatchingPair move =
-        let (x, y) = move
-
-        match y with
-        | "Y" -> x
-        | "Z" -> winingPairs[x]
-        | _ -> losingPairs[x]
+        match move with
+        | (oponent, DRAW) -> oponent
+        | (oponent, WIN) -> winingPairs[oponent]
+        | (oponent, LOSS) -> losingPairs[oponent]
 
     let part1: int =
-        getLines |> List.map (fun (x, y) -> getScore (x, selectionMap[y])) |> List.sum
+        inputPath
+        |> getLines
+        |> List.map (fun (oponent, requiredResult) -> getScore (oponent, selectionMap[requiredResult]))
+        |> List.sum
 
     let part2 =
-        getLines
-        |> List.map (fun (x, y) -> (x, getMatchingPair ((x, y))))
-        |> List.map (fun (x) -> getScore x)
+        inputPath
+        |> getLines
+        |> List.map (fun (oponent, requiredResult) ->
+            (oponent, getMatchingPair ((oponent, parseInputToResult requiredResult))))
+        |> List.map (fun (pair) -> getScore pair)
         |> List.sum
