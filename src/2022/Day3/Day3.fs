@@ -2,6 +2,8 @@ namespace AdventOfCode
 
 module Day3 =
     let inputPath = "./Day3/input.txt"
+    let upperCaseCharAsciiDiff = 38
+    let lowerCaseCharAsciiDiff = 96
 
     let splitStringInHalf (s: string) =
         let middle = (s.Length + 1) / 2
@@ -18,25 +20,26 @@ module Day3 =
         let lowerCaseBoundary = int 'a'
 
         match value with
-        | value when value < lowerCaseBoundary -> value - 38
-        | _ -> value - 96
+        | value when value < lowerCaseBoundary -> value - upperCaseCharAsciiDiff
+        | _ -> value - lowerCaseCharAsciiDiff
+
+    let chunkList chunkSize list =
+        list |> Seq.chunkBySize chunkSize |> Seq.toList
+
+    let getScore chars =
+        chars |> List.map parseLetterToScore |> List.sum
 
     let part1 =
         inputPath
         |> Utils.readAllLines
         |> List.map (fun x -> x |> splitStringInHalf)
-        |> List.map (fun x -> (Set.ofArray x[0], Set.ofArray x[1]))
-        |> List.map (fun (x, y) -> Set.intersect x y |> Set.toList)
-        |> List.map (fun x -> x[0])
-        |> List.map (fun x -> parseLetterToScore x)
-        |> List.sum
+        |> List.map intersectArrays
+        |> getScore
 
     let part2 =
         inputPath
         |> Utils.readAllLines
-        |> Seq.ofList
-        |> Seq.chunkBySize 3
-        |> Seq.map (fun x -> x |> Seq.map (fun x -> x.ToCharArray()))
-        |> Seq.map (fun x -> x |> intersectArrays)
-        |> Seq.map (fun x -> parseLetterToScore x)
-        |> Seq.sum
+        |> chunkList 3
+        |> List.map (fun x -> x |> Seq.map (fun x -> x.ToCharArray()))
+        |> List.map (fun x -> x |> intersectArrays)
+        |> getScore
