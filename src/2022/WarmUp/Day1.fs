@@ -13,24 +13,23 @@ module Day1 =
     let mapToGreaterThanPreviousWindow list =
         list
         |> List.mapi (fun i x ->
-            if
-                i >= windowSize
-                && getWindowSum list windowSize i > getWindowSum list windowSize (i - 1)
-            then
-                1
-            else
-                0)
+            let isGreaterThanPreviousWindow =
+                getWindowSum list windowSize i > getWindowSum list windowSize (i - 1)
+
+            match isGreaterThanPreviousWindow && i >= windowSize with
+            | true -> 1
+            | false -> 0)
 
     let part1 =
-        AdventOfCode.Utils.readAllLines (inputPath)
+        inputPath
+        |> AdventOfCode.Utils.readAllLines
         |> List.map int
         |> mapToGreaterThanPrevious
         |> List.sum
 
-
-
     let part2 =
-        AdventOfCode.Utils.readAllLines (inputPath)
+        inputPath
+        |> AdventOfCode.Utils.readAllLines
         |> List.map int
         |> mapToGreaterThanPreviousWindow
         |> List.sum
