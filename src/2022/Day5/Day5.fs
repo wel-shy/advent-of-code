@@ -9,7 +9,8 @@ module Day5 =
           destination: int }
 
     let parseStackFromLine (line: string) =
-        line.Split(" ") |> Array.map (fun x -> x.Replace("[", "").Replace("]", ""))
+        line.Split(" ")
+        |> Array.map (fun x -> System.Text.RegularExpressions.Regex.Replace(x, "[\\[\\]]", ""))
 
     let parseInstructionFromLine (line: string) =
         line
@@ -17,18 +18,17 @@ module Day5 =
         |> Seq.map (fun x -> int x.Value)
         |> Seq.toList
 
-    let getPayload count isV2 (sourceStack: List<string>) =
-        let payload = sourceStack[sourceStack.Length - count .. sourceStack.Length - 1]
-        if isV2 then payload else payload |> List.rev
-
-    let applyInstructionToStack (isV2: bool) (stacks: string[] list) (instruction: Instruction) =
+    let applyInstructionToStack payloadModifier (stacks: string[] list) (instruction: Instruction) =
         let { stack = stack
               count = count
               destination = destination } =
             instruction
 
         let sourceStack = stacks[stack]
-        let payload = sourceStack |> List.ofArray |> getPayload count isV2 |> List.toArray
+
+        let payload =
+            sourceStack[sourceStack.Length - count .. sourceStack.Length - 1]
+            |> payloadModifier
 
         stacks
         |> List.mapi (fun i x ->
@@ -58,12 +58,14 @@ module Day5 =
 
     let part1 =
         let (instructions, stacks) = getInstructionsAndStacks
-        let solveStack = applyInstructionToStack false
+        let payloadModifier list = list |> Array.rev
+        let solveStack = applyInstructionToStack payloadModifier
 
         instructions |> List.fold solveStack stacks |> getTopOfStacks
 
     let part2 =
         let (instructions, stacks) = getInstructionsAndStacks
-        let solveStack = applyInstructionToStack true
+        let payloadModifier list = list
+        let solveStack = applyInstructionToStack payloadModifier
 
         instructions |> List.fold solveStack stacks |> getTopOfStacks
