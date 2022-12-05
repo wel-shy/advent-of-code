@@ -17,82 +17,53 @@ module Day5 =
         |> Seq.map (fun x -> int x.Value)
         |> Seq.toList
 
-    let applyInstructionToStack (stacks: string[] list) (instruction: Instruction) =
-        let { stack = stack
-              count = count
-              destination = destination } =
-            instruction
-
-        let sourceStack = stacks[stack]
-
-        let payload =
-            sourceStack[sourceStack.Length - count .. sourceStack.Length - 1] |> Array.rev
-
-        let destinationStack = stacks[destination]
-        let newDestinationStack: string[] = Array.concat [ destinationStack; payload ]
-        let newSourceStack = sourceStack.[0 .. sourceStack.Length - count - 1]
-
-        stacks
-        |> List.mapi (fun i x ->
-            if i = destination then newDestinationStack
-            elif i = stack then newSourceStack
-            else x)
-
-    let applyInstructionToStackV2 (stacks: string[] list) (instruction: Instruction) =
-        let { stack = stack
-              count = count
-              destination = destination } =
-            instruction
-
-        let sourceStack = stacks[stack]
-
+    let getPayload count isV2 (sourceStack: List<string>) =
         let payload = sourceStack[sourceStack.Length - count .. sourceStack.Length - 1]
+        if isV2 then payload else payload |> List.rev
 
-        let destinationStack = stacks[destination]
-        let newDestinationStack: string[] = Array.concat [ destinationStack; payload ]
-        let newSourceStack = sourceStack.[0 .. sourceStack.Length - count - 1]
+    let applyInstructionToStack (isV2: bool) (stacks: string[] list) (instruction: Instruction) =
+        let { stack = stack
+              count = count
+              destination = destination } =
+            instruction
+
+        let sourceStack = stacks[stack]
+        let payload = sourceStack |> List.ofArray |> getPayload count isV2 |> List.toArray
 
         stacks
         |> List.mapi (fun i x ->
-            if i = destination then newDestinationStack
-            elif i = stack then newSourceStack
-            else x)
+            match i with
+            | i when i = destination -> Array.concat [ stacks[destination]; payload ]
+            | i when i = stack -> sourceStack.[0 .. sourceStack.Length - count - 1]
+            | _ -> x)
 
+    let getInstructions breakIndex (lines: List<string>) =
+        lines[(breakIndex + 1) .. (lines.Length - 1)]
+        |> List.map parseInstructionFromLine
+        |> List.map (fun x ->
+            { stack = x[1] - 1
+              count = x[0]
+              destination = x[2] - 1 })
+
+    let getTopOfStacks (stacks: List<string[]>) =
+        stacks |> List.map (fun x -> x.[x.Length - 1]) |> String.concat ("")
+
+    let getInstructionsAndStacks =
+        let lines = inputPath |> Utils.readAllLines
+        let indexOfBreak = lines |> List.findIndex (fun x -> x = "")
+        let stacks = lines[0 .. (indexOfBreak - 1)] |> List.map parseStackFromLine
+        let instructions = lines |> getInstructions indexOfBreak
+
+        (instructions, stacks)
 
     let part1 =
-        let x = inputPath |> Utils.readAllLines
-        let indexOfBreak = x |> List.findIndex (fun x -> x = "")
+        let (instructions, stacks) = getInstructionsAndStacks
+        let solveStack = applyInstructionToStack false
 
-        let stacks = x[0 .. (indexOfBreak - 1)] |> List.map (parseStackFromLine)
-
-        let instructions =
-            x[(indexOfBreak + 1) .. (x.Length - 1)]
-            |> List.map parseInstructionFromLine
-            |> List.map (fun x ->
-                { stack = x[1] - 1
-                  count = x[0]
-                  destination = x[2] - 1 })
-
-
-        instructions
-        |> List.fold applyInstructionToStack stacks
-        |> List.map (fun x -> x[x.Length - 1])
-        |> String.concat ""
+        instructions |> List.fold solveStack stacks |> getTopOfStacks
 
     let part2 =
-        let x = inputPath |> Utils.readAllLines
-        let indexOfBreak = x |> List.findIndex (fun x -> x = "")
-        let stacks = x[0 .. (indexOfBreak - 1)] |> List.map (parseStackFromLine)
+        let (instructions, stacks) = getInstructionsAndStacks
+        let solveStack = applyInstructionToStack true
 
-        let instructions =
-            x[(indexOfBreak + 1) .. (x.Length - 1)]
-            |> List.map parseInstructionFromLine
-            |> List.map (fun x ->
-                { stack = x[1] - 1
-                  count = x[0]
-                  destination = x[2] - 1 })
-
-        instructions
-        |> List.fold applyInstructionToStackV2 stacks
-        |> List.map (fun x -> x[x.Length - 1])
-        |> String.concat ""
+        instructions |> List.fold solveStack stacks |> getTopOfStacks
