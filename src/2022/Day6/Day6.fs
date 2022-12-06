@@ -3,24 +3,31 @@ namespace AdventOfCode
 module Day6 =
     let inputPath = "./Day6/test.txt"
 
+    let isSetUnique len (set: Set<char>) = set.Count = len
+
     let isPreviousSequenceUnique sequenceLength (originalList: List<char>) index _char =
-        if index < sequenceLength - 1 then
-            false
-        else
-            let l = originalList.[index - sequenceLength + 1 .. index]
-            let sequence = l |> Set.ofList
-            sequence.Count = sequenceLength
+        match index with
+        | index when index < sequenceLength - 1 -> false
+        | _ ->
+            originalList.[index - sequenceLength + 1 .. index]
+            |> Set.ofList
+            |> isSetUnique sequenceLength
+
+    let getInputAsChars =
+        let line = inputPath |> Utils.readAllLines |> List.head
+        line.ToCharArray() |> List.ofArray
+
+    let getFirstTruthyValue list =
+        list |> List.findIndex (fun x -> x) |> (+) 1
 
     let part1 =
-        let line = inputPath |> Utils.readAllLines |> List.head
-        let chars = line.ToCharArray() |> List.ofArray
-
+        let chars = getInputAsChars
         let solver = isPreviousSequenceUnique 4 chars
-        chars |> List.mapi solver |> List.findIndex (fun x -> x) |> (+) 1
+
+        chars |> List.mapi solver |> getFirstTruthyValue
 
     let part2 =
-        let line = inputPath |> Utils.readAllLines |> List.head
-        let chars = line.ToCharArray() |> List.ofArray
-
+        let chars = getInputAsChars
         let solver = isPreviousSequenceUnique 14 chars
-        chars |> List.mapi solver |> List.findIndex (fun x -> x) |> (+) 1
+
+        chars |> List.mapi solver |> getFirstTruthyValue
