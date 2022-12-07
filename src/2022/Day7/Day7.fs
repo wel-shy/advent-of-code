@@ -7,7 +7,7 @@ module Day7 =
         { Name: string
           Parent: string
           Weight: int
-          Children: Node list }
+          IsDirectory: bool }
 
     let mutable parent = "/"
 
@@ -20,12 +20,12 @@ module Day7 =
             { Name = split[1]
               Parent = parent
               Weight = 0
-              Children = List.empty<Node> }
+              IsDirectory = true }
         | false ->
             { Name = split[1]
               Parent = parent
               Weight = int split[0]
-              Children = List.empty<Node> }
+              IsDirectory = false }
 
     let handleDirOrFile (acc: Map<string, Node>) (name: string) =
         let node = createNode name
@@ -48,7 +48,20 @@ module Day7 =
         | command when command.Contains("$ cd") -> handleCd acc command
         | _ -> handleDirOrFile acc command
 
+    let rec getDirectorySize (dir: string) (fs: Map<string, Node>) =
+        fs.Values
+        |> Seq.filter (fun (x: Node) -> x.Parent.Equals(dir))
+        |> Seq.map (fun x ->
+            if x.IsDirectory then
+                getDirectorySize x.Name fs
+            else
+                x.Weight)
+        |> Seq.sum
+
     let part1 =
         let log = inputPath |> Utils.readAllLines
 
-        log[1 .. (log.Length - 1)] |> List.fold handleCommand Map.empty<string, Node>
+        let fs =
+            log[1 .. (log.Length - 1)] |> List.fold handleCommand Map.empty<string, Node>
+
+        getDirectorySize "d" fs
