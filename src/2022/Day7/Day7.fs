@@ -9,7 +9,7 @@ module Day7 =
           Weight: int
           IsDirectory: bool }
 
-    let mutable parent = "/"
+    let mutable parent = ""
 
     let createNode (rawName: string) =
         let split = rawName.Split(" ")
@@ -75,3 +75,36 @@ module Day7 =
         |> Seq.filter (fun (size) -> size <= limit)
         |> List.ofSeq
         |> List.sum
+
+    let getTotalUsedSpace (fs: Map<string, Node>) =
+        fs.Values
+        |> Seq.filter (fun (x: Node) -> x.Parent.Equals("./"))
+        |> Seq.map (fun x -> if x.IsDirectory then getDirectorySize x fs else x.Weight)
+        |> List.ofSeq
+        |> List.sum
+
+    let part2 =
+        let totalDiskSpace = 70000000
+        let requiredSpace = 30000000
+
+        let log = inputPath |> Utils.readAllLines
+
+        let fs = log |> List.fold handleCommand Map.empty<string, Node>
+
+        let usedSpace =
+            fs.Values
+            |> Seq.filter (fun (x: Node) -> x.Parent.Equals("./"))
+            |> Seq.map (fun x -> if x.IsDirectory then getDirectorySize x fs else x.Weight)
+            |> List.ofSeq
+            |> List.sum
+
+        let remainingSpace = totalDiskSpace - usedSpace
+        let threshold = requiredSpace - remainingSpace
+
+        fs.Values
+        |> Seq.filter (fun x -> x.IsDirectory)
+        |> Seq.map (fun x -> getDirectorySize x fs)
+        |> List.ofSeq
+        |> List.filter (fun x -> x >= threshold)
+        |> List.sort
+        |> List.take 1
