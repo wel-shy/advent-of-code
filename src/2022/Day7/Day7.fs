@@ -29,15 +29,21 @@ module Day7 =
 
     let handleDirOrFile (acc: Map<string, Node>) (name: string) =
         let node = createNode name
-        acc |> Map.add node.Name node
+        let key = [| parent; node.Name |] |> String.concat (".")
+        acc |> Map.add key node
+
+    let getParentFileName (n: string) =
+        let split = n.Split(".")
+
+        split[0 .. split.Length - 2] |> String.concat "."
 
     let handleCd (fs: Map<string, Node>) (command: string) =
         let split = command.Split(" ")
 
         if (split[ 2 ].Equals("..")) then
-            parent <- fs.[parent].Parent
+            parent <- getParentFileName (parent)
         else
-            parent <- split[2]
+            parent <- [| parent; split[2] |] |> String.concat (".")
 
         fs
 
@@ -47,14 +53,12 @@ module Day7 =
         | command when command.Contains("$ cd") -> handleCd acc command
         | _ -> handleDirOrFile acc command
 
-    let rec getDirectorySize (dir: string) (fs: Map<string, Node>) =
+    let rec getDirectorySize (dir: Node) (fs: Map<string, Node>) =
+        let id = [| dir.Parent; dir.Name |] |> String.concat (".")
+
         fs.Values
-        |> Seq.filter (fun (x: Node) -> x.Parent.Equals(dir))
-        |> Seq.map (fun x ->
-            if x.IsDirectory then
-                getDirectorySize x.Name fs
-            else
-                x.Weight)
+        |> Seq.filter (fun (x: Node) -> x.Parent.Equals(id))
+        |> Seq.map (fun x -> if x.IsDirectory then getDirectorySize x fs else x.Weight)
         |> List.ofSeq
         |> List.sum
 
@@ -67,6 +71,7 @@ module Day7 =
 
         fs.Values
         |> Seq.filter (fun x -> x.IsDirectory)
-        |> Seq.map (fun x -> getDirectorySize x.Name fs)
+        |> Seq.map (fun x -> getDirectorySize x fs)
         |> Seq.filter (fun (size) -> size <= limit)
         |> List.ofSeq
+        |> List.sum
