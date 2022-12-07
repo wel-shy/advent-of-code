@@ -9,69 +9,46 @@ module Day7 =
           Weight: int
           Children: Node list }
 
-    let mutable currentNode =
-        { Name = "/"
-          Parent = null
-          Weight = 0
-          Children = List.empty<Node> }
+    let mutable parent = "/"
 
-    let nodes = Map.empty<string, Node>.Add ("/", currentNode)
+    let createNode (rawName: string) =
+        let split = rawName.Split(" ")
+        let isDir = split[ 0 ].Equals("dir")
 
-    let mutable fs = List.empty<Node>
-
-    let isNotFileOrDirectory (s: string) = s.Contains("$")
-
-    let parseLinesToNode parentNode (line: string) =
-        let split = line.Split(" ")
-
-        match split[0] with
-        | "dir" ->
+        match isDir with
+        | true ->
             { Name = split[1]
-              Parent = parentNode.Name
+              Parent = parent
               Weight = 0
               Children = List.empty<Node> }
-        | _ ->
+        | false ->
             { Name = split[1]
-              Parent = parentNode.Name
+              Parent = parent
               Weight = int split[0]
               Children = List.empty<Node> }
 
-    let handleList index (log: List<string>) =
-        let remainingInstructions = log.[(index + 1) .. (log.Length - 1)]
+    let handleDirOrFile (acc: Map<string, Node>) (name: string) =
+        let node = createNode name
+        acc |> Map.add node.Name node
 
-        let x =
-            remainingInstructions |> List.tryFindIndex (fun x -> x |> isNotFileOrDirectory)
-
-        let endOfList =
-            match x with
-            | Some x -> x - 1
-            | None -> remainingInstructions.Length - 1
-
-        remainingInstructions[0..endOfList] |> List.map (parseLinesToNode currentNode)
-
-    let handleCd (command: string) =
+    let handleCd (fs: Map<string, Node>) (command: string) =
         printfn "cd: %s" command
         let split = command.Split(" ")
 
-        if nodes.ContainsKey(split[2]) then
-            currentNode <- nodes.[split[2]]
+        if (split[ 2 ].Equals("..")) then
+            parent <- fs.[parent].Parent
         else
-            currentNode <-
-                { Name = split[2]
-                  Parent = currentNode.Name
-                  Weight = 0
-                  Children = List.empty<Node> }
+            parent <- split[2]
 
-            Map.add split[2] currentNode nodes
+        fs
 
-    let handleCommand list index (command: string) =
+    let handleCommand (acc: Map<string, Node>) (command: string) =
         match command with
-        | command when command.Equals("$ ls") -> handleList index list
-        | command when command.Contains("$ cd") -> handleCd command
-        | _ -> null
+        | command when command.Equals("$ ls") -> acc
+        | command when command.Contains("$ cd") -> handleCd acc command
+        | _ -> handleDirOrFile acc command
 
     let part1 =
         let log = inputPath |> Utils.readAllLines
-        let handler = handleCommand log[1 .. (log.Length - 1)]
 
-        log[1 .. (log.Length - 1)] |> List.mapi handler
+        log[1 .. (log.Length - 1)] |> List.fold handleCommand Map.empty<string, Node>
