@@ -1,7 +1,7 @@
 namespace AdventOfCode
 
 module Day7 =
-    let inputPath = "./Day7/test.txt"
+    let inputPath = "./Day7/input.txt"
 
     type Node =
         { Name: string
@@ -32,7 +32,6 @@ module Day7 =
         acc |> Map.add node.Name node
 
     let handleCd (fs: Map<string, Node>) (command: string) =
-        printfn "cd: %s" command
         let split = command.Split(" ")
 
         if (split[ 2 ].Equals("..")) then
@@ -56,12 +55,18 @@ module Day7 =
                 getDirectorySize x.Name fs
             else
                 x.Weight)
-        |> Seq.sum
+        |> List.ofSeq
+        |> List.sum
 
     let part1 =
+        let limit = 100000
         let log = inputPath |> Utils.readAllLines
 
         let fs =
             log[1 .. (log.Length - 1)] |> List.fold handleCommand Map.empty<string, Node>
 
-        getDirectorySize "d" fs
+        fs.Values
+        |> Seq.filter (fun x -> x.IsDirectory)
+        |> Seq.map (fun x -> getDirectorySize x.Name fs)
+        |> Seq.filter (fun (size) -> size <= limit)
+        |> List.ofSeq
