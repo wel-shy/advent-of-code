@@ -3,28 +3,6 @@ namespace AdventOfCode
 module Day8 =
 
     let inputPath = "./Day8/input.txt"
-    let visibilityMap = Map.empty<string, int>
-
-    let getExteriorCount (list: List<int[]>) =
-        let v = (list |> List.length)
-        let h = (list[0].Length - 2)
-
-        (v + h) * 2
-
-    let isTallerThanPrevious (row: int[]) index =
-        if index = 0 then
-            true
-        else if index = 1 then
-            row[1] > row[0]
-        else
-            let previous = row[0 .. (index - 1)]
-            let max = previous |> Array.max
-
-            row[index] > max
-
-    let mapRow (row: int[]) =
-        let solver = isTallerThanPrevious row
-        row |> Array.mapi (fun x _y -> solver x)
 
     let getAColumn (c: int) (A: List<List<int>>) =
         let column =
@@ -32,18 +10,6 @@ module Day8 =
             |> List.fold (fun (acc: List<int>) (cur: List<int>) -> List.append acc [ cur[c] ]) List.empty<int>
 
         column
-
-    // let rotate (A: List<int[]>) =
-    //     seq {
-    //         for i in 0 .. A[0].Length - 1 do
-    //             yield getAColumn (i) A
-    //     }
-    //     |> (List.ofSeq >> List.map Array.ofList)
-
-    let rotateBack2DArray A =
-        let mutable map = List.empty<List<int>>
-
-        map
 
     let isTallest (list: List<int>) tree = tree > (list |> List.max)
 
@@ -73,10 +39,7 @@ module Day8 =
             true
         else
             let row = map[y]
-            // let column = getAColumn x map
-
             let t = map[y][x]
-
 
             let left = getFromLeft row x
             let right = getFromRight row x
@@ -90,10 +53,7 @@ module Day8 =
                 |> List.filter (fun tree -> t > tree)
                 |> List.length
 
-            // let tree = map[x][y]
-
             toCheck > 0
-
 
     let part1 =
         let trees =
@@ -101,10 +61,7 @@ module Day8 =
             |> Utils.readAllLines
             |> List.map (fun x -> x |> Seq.toList |> List.map (fun y -> int y - int '0'))
 
-        let ans =
-            trees
-            |> List.mapi (fun y list -> list |> List.mapi (fun x _ -> solve trees x y))
-
-        ans
+        trees
+        |> List.mapi (fun y list -> list |> List.mapi (fun x _ -> solve trees x y))
         |> List.map (fun x -> x |> List.filter (fun isVisible -> isVisible) |> List.length)
         |> List.sum
