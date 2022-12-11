@@ -2,6 +2,10 @@ namespace AdventOfCode
 
 module Day10 =
     let inputPath = "./Day10/input.txt"
+    let rowLength = 40
+    let rowUpperBoundaries = [ 40; 80; 120; 160; 200; 240 ]
+    let getRow = [ for _ in 0 .. (rowLength - 1) -> " " ]
+    let rows = [ for _ in 0..5 -> getRow ]
 
     let parseToCycle (instruction: string) =
         let arr = instruction.Split(" ")
@@ -22,5 +26,20 @@ module Day10 =
 
     let getStrengthAtCycle cycle = (getValueAtCycle cycle) * cycle
 
-    let part1 =
-        [ 20; 60; 100; 140; 180; 220 ] |> List.map getStrengthAtCycle |> List.sum
+    let applyCycle index _ =
+        let spriteValue = getValueAtCycle (index + 1)
+        let spritePosition = [ (spriteValue - 1) .. (spriteValue + 1) ]
+        let writerIndex = (index) % 40
+
+        match writerIndex with
+        | index when spritePosition |> List.contains (index) -> "#"
+        | _ -> " "
+
+    let part2 =
+        let ans = cycles |> List.mapi applyCycle
+
+        ans
+        |> Seq.ofList
+        |> Seq.chunkBySize 40
+        |> List.ofSeq
+        |> List.map (fun x -> String.concat "" x)
