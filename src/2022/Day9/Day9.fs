@@ -28,8 +28,6 @@ module Day9 =
         | "D" -> (x, y - amount)
         | _ -> (x, y)
 
-    let length = 2
-
     let getLastKnownTailPosition (tails: List<int * int>) =
         if tails.Length > 0 then tails[tails.Length - 1] else tail
 
@@ -50,29 +48,38 @@ module Day9 =
 
         [ (nextTx, nextTy) ] |> List.append tails
 
-    let applyInstruction current (ins: string) =
+    let applyInstructionWithIterations iterations current (ins: string) =
         let arr = ins.Split(" ")
 
-        let hPath =
-            [ 1 .. (int arr[1]) ]
-            |> List.mapi (fun i _ -> getNewPosition (arr[0], i + 1) current)
+        for i in 0..iterations do
+            let hPath =
+                [ 1 .. (int arr[1]) ]
+                |> List.mapi (fun i _ -> getNewPosition (arr[0], i + 1) current)
 
-        let ans =
-            hPath
-            |> List.filter (fun x -> isNotTouching x tail)
-            |> List.fold getTailPositions []
+            let ans =
+                hPath
+                |> List.filter (fun x -> isNotTouching x tail)
+                |> List.fold getTailPositions []
 
-        if ans.Length > 0 then
-            let touchedValues =
-                ans
-                |> List.fold (fun (acc: Map<string, bool>) (x, y) -> acc.Add($"{x},{y}", true)) touched
+            if ans.Length > 0 then
+                let touchedValues =
+                    ans
+                    |> List.fold (fun (acc: Map<string, bool>) (x, y) -> acc.Add($"{x},{y}", true)) touched
 
-            touched <- touchedValues
-            tail <- ans[ans.Length - 1]
+                touched <- touchedValues
+                tail <- ans[ans.Length - 1]
 
-        hPath[hPath.Length - 1]
+        [ (0, 0) ][0 - 1]
 
     let part1 =
+        let applyInstruction = applyInstructionWithIterations 1
+        let _ = inputPath |> Utils.readAllLines |> List.fold applyInstruction (0, 0)
+        let points = touched.Keys |> List.ofSeq
+
+        ((points |> List.length))
+
+    let part2 =
+        let applyInstruction = applyInstructionWithIterations 10
         let _ = inputPath |> Utils.readAllLines |> List.fold applyInstruction (0, 0)
         let points = touched.Keys |> List.ofSeq
 
