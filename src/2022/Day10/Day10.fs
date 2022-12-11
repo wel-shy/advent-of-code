@@ -3,7 +3,6 @@ namespace AdventOfCode
 module Day10 =
     let inputPath = "./Day10/input.txt"
     let rowLength = 40
-    let rowUpperBoundaries = [ 40; 80; 120; 160; 200; 240 ]
     let getRow = [ for _ in 0 .. (rowLength - 1) -> " " ]
     let rows = [ for _ in 0..5 -> getRow ]
 
@@ -15,8 +14,8 @@ module Day10 =
         | "addx" -> [ 0; int arr[1] ]
         | _ -> []
 
-    let cycles =
-        inputPath |> Utils.readAllLines |> List.map parseToCycle |> List.collect id
+    let getCycles = Utils.readAllLines >> List.map parseToCycle >> List.collect id
+    let cycles = inputPath |> getCycles
 
     let getXAtCycleWithInitialValue initialValue (list: List<int>) cycle =
         let valueAtCycle = list[0 .. cycle - 2] |> List.sum // skip falling cycle values
@@ -29,17 +28,20 @@ module Day10 =
     let applyCycle index _ =
         let spriteValue = getValueAtCycle (index + 1)
         let spritePosition = [ (spriteValue - 1) .. (spriteValue + 1) ]
-        let writerIndex = (index) % 40
+        let writerIndex = index % rowLength
+        let isWritingSprite = spritePosition |> List.contains writerIndex
 
-        match writerIndex with
-        | index when spritePosition |> List.contains (index) -> "#"
+        match isWritingSprite with
+        | true -> "#"
         | _ -> " "
 
-    let part2 =
-        let ans = cycles |> List.mapi applyCycle
+    let part1 =
+        [ 20; 60; 100; 140; 180; 220 ] |> List.map getStrengthAtCycle |> List.sum
 
-        ans
+    let part2 =
+        cycles
+        |> List.mapi applyCycle
         |> Seq.ofList
-        |> Seq.chunkBySize 40
+        |> Seq.chunkBySize rowLength
         |> List.ofSeq
         |> List.map (fun x -> String.concat "" x)
