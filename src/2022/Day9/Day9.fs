@@ -2,7 +2,7 @@ namespace AdventOfCode
 
 module Day9 =
     let inputPath = "./Day9/input.txt"
-    let mutable touched = Map.empty<string, bool>.Add ("500,500", true)
+    let mutable touched = Map.empty<string, bool>.Add ("0,0", true)
     let mutable tail: int * int = (0, 0)
 
     let squareDiff point =
@@ -15,7 +15,7 @@ module Day9 =
 
         int (sqrt ((squareDiff (ax, bx)) + (squareDiff (ay, by))))
 
-    let isTouching a b = (getEuclidianDistance a b) <= 1
+    let isNotTouching a b = (getEuclidianDistance a b) > 1
 
     let getNewPosition ins current =
         let (dir, amount) = ins
@@ -30,23 +30,25 @@ module Day9 =
 
     let length = 2
 
-    let getLastTailPosition (path: List<int * int>) =
-        match path.Length with
-        | 0 -> tail
-        | _ -> path[path.Length - 1]
+    let getLastKnownTailPosition (tails: List<int * int>) =
+        if tails.Length > 0 then tails[tails.Length - 1] else tail
 
-    let getTPath hPath =
-        let pointsFurhterThanAcceptedLength =
-            hPath |> List.filter (fun x -> not (isTouching x tail))
+    let getTailPositions (tails: List<int * int>) (head: int * int) =
+        let (tx, ty) = getLastKnownTailPosition tails
 
-        let idx =
-            if pointsFurhterThanAcceptedLength.Length > 0 then
-                hPath |> List.findIndex (fun x -> x = pointsFurhterThanAcceptedLength[0])
-            else
-                -1
+        let nextTx =
+            match head with
+            | (hx, _) when hx > tx -> tx + 1
+            | (hx, _) when hx < tx -> tx - 1
+            | _ -> tx
 
-        pointsFurhterThanAcceptedLength[0 .. (pointsFurhterThanAcceptedLength.Length) - 2]
-        |> List.append (if idx > 0 then [ hPath[idx - 1] ] else [])
+        let nextTy =
+            match head with
+            | (_, hy) when hy > ty -> ty + 1
+            | (_, hy) when hy < ty -> ty - 1
+            | _ -> ty
+
+        [ (nextTx, nextTy) ] |> List.append tails
 
     let applyInstruction current (ins: string) =
         let arr = ins.Split(" ")
@@ -55,25 +57,23 @@ module Day9 =
             [ 1 .. (int arr[1]) ]
             |> List.mapi (fun i _ -> getNewPosition (arr[0], i + 1) current)
 
-        let tPath = getTPath hPath
+        let ans =
+            hPath
+            |> List.filter (fun x -> isNotTouching x tail)
+            |> List.fold getTailPositions []
 
-        let touchedValues =
-            tPath
-            |> List.fold (fun (acc: Map<string, bool>) (x, y) -> acc.Add($"{x},{y}", true)) touched
+        if ans.Length > 0 then
+            let touchedValues =
+                ans
+                |> List.fold (fun (acc: Map<string, bool>) (x, y) -> acc.Add($"{x},{y}", true)) touched
 
-        printfn "%A" tPath
-
-        touched <- touchedValues
-        tail <- getLastTailPosition (tPath)
+            touched <- touchedValues
+            tail <- ans[ans.Length - 1]
 
         hPath[hPath.Length - 1]
 
     let part1 =
-        let x = inputPath |> Utils.readAllLines |> List.fold applyInstruction (500, 500)
+        let _ = inputPath |> Utils.readAllLines |> List.fold applyInstruction (0, 0)
         let points = touched.Keys |> List.ofSeq
-        // printfn "%A" points
-        // printfn "%A" ((points |> List.length) + 1)
-
-        // printfn "%A" (getEuclidianDistance (4, 1) (4, 0))
 
         ((points |> List.length))
