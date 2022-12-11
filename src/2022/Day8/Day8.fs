@@ -33,6 +33,27 @@ module Day8 =
         elif x = map[y].Length - 1 then true
         else false
 
+    let isVisible directions tree =
+        let toCheck =
+            directions
+            |> List.ofArray
+            |> List.map (fun x -> x |> List.max)
+            |> List.filter (fun item -> tree > item)
+            |> List.length
+
+        toCheck > 0
+
+    let isBiggerThanPrevious limit (path: List<int>) cur = path[cur] < limit
+
+    let getDistanceWithTrees limit (path: List<int>) =
+        let isBiggerMap = path |> List.mapi (fun i x -> isBiggerThanPrevious limit path i)
+        let firstSmaller = isBiggerMap |> List.tryFindIndex (fun x -> x = false)
+
+        match firstSmaller with
+        | Some x -> path[0 .. (x)] |> Seq.length
+        | _ -> isBiggerMap.Length
+
+    // path[0 .. (firstSmaller - 1)] |> Seq.length
 
     let solve (map: List<List<int>>) x y =
         if isExterior map x y then
@@ -41,27 +62,44 @@ module Day8 =
             let row = map[y]
             let t = map[y][x]
 
-            let left = getFromLeft row x
-            let right = getFromRight row x
+            let left = getFromLeft row x |> List.rev
+            let right = getFromRight row x |> List.rev
             let top = getFromTopWithTrees map x y
             let bottom = getFromBottonWithTrees map x y
 
-            let toCheck =
-                [| left; right; top; bottom |]
-                |> List.ofArray
-                |> List.map (fun x -> x |> List.max)
-                |> List.filter (fun tree -> t > tree)
-                |> List.length
+            isVisible [| left; right; top; bottom |] t
 
-            toCheck > 0
+    let getScenicScore (map: List<List<int>>) x y =
+        let row = map[y]
+        let t = map[y][x]
+        let getDistance = getDistanceWithTrees t
+
+        let left = getFromLeft row x |> List.rev
+        let right = getFromRight row x |> List.rev
+        let top = getFromTopWithTrees map x y |> List.rev
+        let bottom = getFromBottonWithTrees map x y
+
+        [| left; right; top; bottom |]
+        |> Array.map getDistance
+        |> Array.fold (fun acc cur -> acc * cur) 1
+
+    let getTopography =
+        inputPath
+        |> Utils.readAllLines
+        |> List.map (fun x -> x |> Seq.toList |> List.map (fun y -> int y - int '0'))
 
     let part1 =
-        let trees =
-            inputPath
-            |> Utils.readAllLines
-            |> List.map (fun x -> x |> Seq.toList |> List.map (fun y -> int y - int '0'))
+        let trees = getTopography
 
         trees
         |> List.mapi (fun y list -> list |> List.mapi (fun x _ -> solve trees x y))
         |> List.map (fun x -> x |> List.filter (fun isVisible -> isVisible) |> List.length)
         |> List.sum
+
+    let part2 =
+        let trees = getTopography
+
+        trees
+        |> List.mapi (fun y list -> list |> List.mapi (fun x _ -> getScenicScore trees x y))
+        |> List.map List.max
+        |> List.max
