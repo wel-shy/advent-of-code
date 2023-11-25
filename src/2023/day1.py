@@ -1,28 +1,22 @@
 import lib
+import functools
+
+def reduce_calories(calories, current):
+    if current == "\n":
+        return calories + [0]
+    else:
+        return calories[:-1] + [calories[len(calories) - 1] + int(current)]
 
 def parse_to_calories(lines):
-    calories = [0]
-
-    for line in lines:
-        if line == "\n":
-            calories.append(0)
-            continue
-
-        calories[len(calories) -1] = calories[len(calories) -1] + int(line)
-
-    calories.sort(reverse=True)
+    calories = functools.reduce(lambda acc, cur: reduce_calories(acc, cur), lines, [0])
     
-    return calories
+    return sorted(calories, reverse=True)
 
 def part_1(lines):
-    calories = parse_to_calories(lines)
+    return parse_to_calories(lines)[0]
     
-    return calories[0]
-
 def part_2(lines):
-    calories = parse_to_calories(lines)
-
-    return sum(calories[0:3])
+    return sum(parse_to_calories(lines)[0:3])
 
 def __main__():
     lines = lib.read_file("./test.txt")
