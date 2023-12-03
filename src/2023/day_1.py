@@ -3,7 +3,7 @@ import functools
 
 INPUT_FILE = "./inputs/day_1_input.txt"
 
-NEW_MAP = {
+NUMBER_MAP = {
   "one": "o1e",
   "two": "t2o",
   "three": "t3e",
@@ -16,18 +16,15 @@ NEW_MAP = {
 }
 
 def map_text_to_digit(line):
-    l = line
+    l = ''
 
-    for num in NEW_MAP.keys():
-        l = l.replace(num, NEW_MAP[num])
+    for num in NUMBER_MAP.keys():
+        l = line.replace(num, NUMBER_MAP[num])
+
     return l
     
 def get_digits(line):
-    digits = []
-    for char in line:
-        if char.isnumeric():
-            digits.append(int(char))
-
+    digits = functools.reduce(lambda acc, cur: acc + [int(cur)] if cur.isnumeric() else acc + [], line, [])
     return get_line_value(digits)
 
 def get_line_value(digits):
@@ -35,19 +32,15 @@ def get_line_value(digits):
 
 def part_1(lines):
    x = list(map(lambda line: get_digits(line), lines))
-   x = functools.reduce(lambda acc, cur: acc + cur, x, 0)
-   return x
+   return functools.reduce(lambda acc, cur: acc + cur, x, 0)
 
 def part_2(lines):
-   x = list(map(lambda l: map_text_to_digit(l), lines))
-   x = list(map(lambda line: get_digits(line), x))
-   x = functools.reduce(lambda acc, cur: acc + cur, x, 0)
-   return x
+   x = map(lambda l: map_text_to_digit(l), lines)
+   x = map(lambda line: get_digits(line), x)
+   return functools.reduce(lambda acc, cur: acc + cur, list(x), 0)
 
-def __main__():
+if __name__ == '__main__':
     lines = lib.read_file(INPUT_FILE)
 
     print(f"Part 1: {part_1(lines)}")
     print(f"Part 2: {part_2(lines)}")
-
-__main__()
