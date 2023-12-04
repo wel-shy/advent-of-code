@@ -59,9 +59,6 @@ def get_number_coordinates(lines):
         
   return number_coordinates
 
-def map_coordinates_to_number(coordinate):
-  return int(lines[coordinate[2]][coordinate[0]:coordinate[1] + 1])
-
 def reduce_to_coord_map(acc, cur):
   cords = f'{cur[0]}:{cur[1]}'
   
@@ -85,7 +82,7 @@ def filter_records(adjacent_specials):
 def part_1(lines):    
   num_coordinates = get_number_coordinates(lines)
   valid_coordinates = list(filter(lambda c: len(get_adjacent_specials(c[0], c[1], c[2])) > 0, num_coordinates))
-  nums = list(map(lambda c: map_coordinates_to_number(c), valid_coordinates))
+  nums = list(map(lambda c: int(lines[c[2]][c[0]:c[1] + 1]), valid_coordinates))
   
   return functools.reduce(lambda a, b: a + b, nums)
 
