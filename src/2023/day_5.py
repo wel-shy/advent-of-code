@@ -15,7 +15,7 @@ def get_maps(lines):
   maps = []
   
   current_map = get_default_map()
-  for line in lines[2:]:
+  for index, line in enumerate(lines[2:]):
     if ":" in line:
       current_map['id'] = line.split(":")[0].strip()
     elif len(line) < 1:
@@ -25,16 +25,19 @@ def get_maps(lines):
       ranges = list(map(lambda x: int(x), line.split(" ")))
       
       current_map["ranges"].append({
-        'destination': list(range(ranges[0], ranges[0] + ranges[2])),
-        'start': list(range(ranges[1], ranges[1] + ranges[2]))
+        'destination': ranges[0],
+        'start': ranges[1],
+        'spread': ranges[2]
       })
+      
+      if index == len(lines) - 3:
+        maps.append(current_map)
   
   return maps
 
 def part_1(lines):
   seeds = get_seeds(lines)
   maps = get_maps(lines)
-  
   ans = []
   
   for seed in seeds:
@@ -45,16 +48,21 @@ def part_1(lines):
       for r in m['ranges']:
         if did_map:
           continue
-        start_idx = r['start'].index(current) if current in r['start'] else -1
-        if start_idx != -1:
-          steps.append((m['id'], r['destination'][start_idx]))
-          current = r['destination'][start_idx]
-          did_map = True
+        
+        start_map = r['start']
+        end_map = r['start'] + r['spread'] - 1
+        start_idx = current - start_map
+        
+        if current < start_map or current > end_map:
+          continue
+        
+        mapping = r['destination'] + start_idx
+        steps.append((m['id'], mapping))
+        current = mapping
+        did_map = True
           
-    print(seed, steps)
     ans.append(current)  
     
-  print(ans)
   return min(ans)
 
 if __name__ == '__main__':
